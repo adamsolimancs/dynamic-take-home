@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import type { Wallet } from './api'
-import { createWallet, getBalance, sendTransaction, signMessage } from './api'
+
+type Wallet = {
+  id: string
+  address: string
+}
 
 type WalletState = Wallet & { label?: string }
 
@@ -51,11 +54,30 @@ function App() {
     [wallets, selectedId],
   )
 
+  // API helpers using VITE_API_URL and backend routes in walletRoutes.js
+  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:4000'
+
+  async function api<T>(path: string, init?: RequestInit): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...init,
+    })
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`
+      try {
+        const j: any = await res.json()
+        msg = j?.message || j?.error || msg
+      } catch {}
+      throw new Error(msg)
+    }
+    return res.json()
+  }
+
   async function onCreateWallet() {
     setError(null)
     setIsCreating(true)
     try {
-      const w = await createWallet()
+      const w = await api<Wallet>('/api/wallets/createWallet', { method: 'POST' })
       setWallets((prev) => [{ ...w }, ...prev])
       setSelectedId(w.id)
     } catch (e: any) {
@@ -71,7 +93,10 @@ function App() {
     setLoadingBalance(true)
     setBalance(null)
     try {
-      const b = await getBalance(selected.id)
+      const data = await api<{ balance: string | number }>(
+        `/api/wallets/${selected.id}/balance`,
+      )
+      const b = typeof data.balance === 'string' ? parseFloat(data.balance) : data.balance
       setBalance(b)
     } catch (e: any) {
       setError(e?.message || 'Failed to get balance')
@@ -86,8 +111,11 @@ function App() {
     setLoadingSign(true)
     setSignedMessage(null)
     try {
-      const sig = await signMessage(selected.id, message)
-      setSignedMessage(sig)
+      const data = await api<{ signedMessage: string }>(
+        `/api/wallets/${selected.id}/signMessage`,
+        { method: 'POST', body: JSON.stringify({ message }) },
+      )
+      setSignedMessage(data.signedMessage)
     } catch (e: any) {
       setError(e?.message || 'Failed to sign message')
     } finally {
@@ -106,8 +134,11 @@ function App() {
     setLoadingSend(true)
     setTxHash(null)
     try {
-      const hash = await sendTransaction(selected.id, toAddress.trim(), amt)
-      setTxHash(hash)
+      const data = await api<{ transactionHash: string }>(
+        `/api/wallets/${selected.id}/sendTransaction`,
+        { method: 'POST', body: JSON.stringify({ to: toAddress.trim(), amount: amt }) },
+      )
+      setTxHash(data.transactionHash)
     } catch (e: any) {
       setError(e?.message || 'Failed to send transaction')
     } finally {
@@ -233,7 +264,7 @@ function App() {
       </section>
 
       <footer className="footer">
-        <span>Built for the Dynamic take‑home</span>
+        <span>Built for the Dynamic takehome</span>
         <span className="sep">•</span>
         <span>by Adam Soliman</span>
       </footer>
