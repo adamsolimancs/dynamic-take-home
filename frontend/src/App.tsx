@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './App.css'
 
 type Wallet = {
@@ -8,55 +8,44 @@ type Wallet = {
 
 type WalletState = Wallet & { label?: string }
 
-const LS_KEY = 'vencura.wallets'
-
-function App() {
+// Main App component, interfaces the main API routes:
+// - Create Wallet
+// - Get Balance
+// - Sign Message
+// - Send Transaction
+export default function App() {
   const [wallets, setWallets] = useState<WalletState[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Actions state
+  // API data fetching states
   const [balance, setBalance] = useState<number | null>(null)
   const [loadingBalance, setLoadingBalance] = useState(false)
 
-  const [message, setMessage] = useState('Hello, VenCura!')
+  const [message, setMessage] = useState('')
   const [signedMessage, setSignedMessage] = useState<string | null>(null)
   const [loadingSign, setLoadingSign] = useState(false)
 
   const [toAddress, setToAddress] = useState('')
-  const [amount, setAmount] = useState('0.01')
+  const [amount, setAmount] = useState('0.00')
   const [txHash, setTxHash] = useState<string | null>(null)
   const [loadingSend, setLoadingSend] = useState(false)
-
-  // Load wallets from localStorage on first mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY)
-      if (raw) {
-        const parsed: WalletState[] = JSON.parse(raw)
-        setWallets(parsed)
-        if (parsed.length > 0) setSelectedId(parsed[0].id)
-      }
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  // Persist wallets any time they change
-  useEffect(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify(wallets))
-  }, [wallets])
 
   const selected = useMemo(
     () => wallets.find((w) => w.id === selectedId) || null,
     [wallets, selectedId],
   )
 
-  // API helpers using VITE_API_URL and backend routes in walletRoutes.js
-  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:4000'
+  /* API helpers using backend routes in walletRoutes.js */
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
+  // Generic API function
+  // Parameters
+  // - path: string representing the api path to be attached after the base URL
+  // - init: RequestInit representing additional request headers, such as method
+  //          or body.
   async function api<T>(path: string, init?: RequestInit): Promise<T> {
     const res = await fetch(`${API_BASE}${path}`, {
       headers: { 'Content-Type': 'application/json' },
@@ -67,7 +56,7 @@ function App() {
       try {
         const j: any = await res.json()
         msg = j?.message || j?.error || msg
-      } catch {}
+      } catch { }
       throw new Error(msg)
     }
     return res.json()
@@ -77,7 +66,7 @@ function App() {
     setError(null)
     setIsCreating(true)
     try {
-      const w = await api<Wallet>('/api/wallets/createWallet', { method: 'POST' })
+      const w = await api<Wallet>('/api/wallets/create', { method: 'POST' })
       setWallets((prev) => [{ ...w }, ...prev])
       setSelectedId(w.id)
     } catch (e: any) {
@@ -88,14 +77,17 @@ function App() {
   }
 
   async function onGetBalance() {
-    if (!selected) return
+    if (!selected) {
+      console.log('No wallet selected, cannot get balance.')
+      return
+    }
     setError(null)
     setLoadingBalance(true)
     setBalance(null)
     try {
       const data = await api<{ balance: string | number }>(
         `/api/wallets/${selected.id}/balance`,
-      )
+      );
       const b = typeof data.balance === 'string' ? parseFloat(data.balance) : data.balance
       setBalance(b)
     } catch (e: any) {
@@ -161,11 +153,11 @@ function App() {
       <section className="wallets">
         <div className="row">
           <h2>Wallets</h2>
-          <button className="primary" onClick={onCreateWallet} disabled={isCreating}>
+          <button className="btn primary" onClick={onCreateWallet} disabled={isCreating}>
             {isCreating ? 'Creating…' : 'Create Wallet'}
           </button>
         </div>
-        {wallets.length === 0 ? (
+        {(!wallets || wallets.length === 0) ? (
           <div className="empty">No wallets yet. Create your first one.</div>
         ) : (
           <div className="wallet-list">
@@ -184,90 +176,88 @@ function App() {
         )}
       </section>
 
-      <section className="grid">
-        <div className="card">
-          <div className="card-head">
-            <h3>Balance</h3>
-            <button onClick={onGetBalance} disabled={!selected || loadingBalance}>
-              {loadingBalance ? 'Fetching…' : 'Get Balance'}
-            </button>
-          </div>
-          <div className="card-body">
-            {!selected ? (
-              <div className="muted">Select a wallet</div>
-            ) : balance === null ? (
-              <div className="muted">—</div>
-            ) : (
-              <div className="balance">{balance} ETH</div>
-            )}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-head">
-            <h3>Sign Message</h3>
-            <button onClick={onSignMessage} disabled={!selected || loadingSign}>
-              {loadingSign ? 'Signing…' : 'Sign'}
-            </button>
-          </div>
-          <div className="card-body v">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Message to sign"
-            />
-            {signedMessage && (
-              <div className="mono scroll">
-                <label>Signature</label>
-                <code>{signedMessage}</code>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-head">
-            <h3>Send Transaction</h3>
-            <button onClick={onSendTx} disabled={!selected || loadingSend}>
-              {loadingSend ? 'Sending…' : 'Send'}
-            </button>
-          </div>
-          <div className="card-body v">
-            <input
-              type="text"
-              value={toAddress}
-              onChange={(e) => setToAddress(e.target.value)}
-              placeholder="Recipient 0x address"
-              spellCheck={false}
-            />
-            <div className="row gap">
-              <input
-                className="sm"
-                type="number"
-                min="0"
-                step="0.0001"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Amount (ETH)"
-              />
-              <span className="unit">ETH</span>
+      {/* DYNAMICally render other elements once a wallet is created. */}
+      {(wallets && wallets.length > 0) && (<div className="api-cards">
+        <section className="grid">
+          <div className="card">
+            <div className="card-head">
+              <h3>Balance</h3>
+              <button className="btn" onClick={onGetBalance} disabled={!selected || loadingBalance}>
+                {loadingBalance ? 'Loading...' : 'Get Balance'}
+              </button>
             </div>
-            {txHash && (
-              <div className="mono scroll">
-                <label>Transaction Hash</label>
-                <code>{txHash}</code>
-              </div>
-            )}
+            <div className="card-body">
+              {!selected ? (
+                <div className="muted">Select a wallet</div>
+              ) : balance === null ? (
+                <div className="muted">—</div>
+              ) : (
+                <div className="balance">{balance} ETH</div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
 
-      <footer className="footer">
-        <span>Built for the Dynamic takehome</span>
-        <span className="sep">•</span>
-        <span>by Adam Soliman</span>
-      </footer>
+          <div className="card">
+            <div className="card-head">
+              <h3>Sign Message</h3>
+              <button className="btn" onClick={onSignMessage} disabled={!selected || loadingSign}>
+                {loadingSign ? 'Signing…' : 'Sign'}
+              </button>
+            </div>
+            <div className="card-body v">
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Message to sign"
+              />
+              {signedMessage && (
+                <div className="mono scroll">
+                  <label>Signature</label>
+                  <code>{signedMessage}</code>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h3>Send Transaction</h3>
+              <button className="btn" onClick={onSendTx} disabled={!selected || loadingSend}>
+                {loadingSend ? 'Sending…' : 'Send'}
+              </button>
+            </div>
+            <div className="card-body v">
+              <input
+                type="text"
+                value={toAddress}
+                onChange={(e) => setToAddress(e.target.value)}
+                placeholder="Recipient 0x address"
+                spellCheck={false}
+              />
+              <div className="row gap">
+                <input
+                  className="sm"
+                  type="number"
+                  min="0"
+                  step="0.0001"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Amount (ETH)"
+                />
+                <span className="unit">ETH</span>
+              </div>
+              {txHash && (
+                <div className="mono scroll">
+                  <label>Transaction Hash</label>
+                  <code>{txHash}</code>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>)}
+
     </div>
   )
 }
@@ -277,5 +267,3 @@ function truncate(addr?: string, left = 6, right = 4) {
   if (addr.length <= left + right + 3) return addr
   return `${addr.slice(0, left)}…${addr.slice(-right)}`
 }
-
-export default App

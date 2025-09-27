@@ -8,24 +8,17 @@ const app = express();
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 app.use(cors()); // Enable CORS (frontend -> backend)
-app.use(morgan("dev")); // Logging
+app.use(morgan("dev")); // Dev logging
 
 
 // Routes
 app.use("/api/wallets", walletRoutes);
 
 
-// Healthcheck
-app.get("/health", (req, res) => {
-res.json({ status: "ok" });
-});
-
-
-// Error handling middleware (basic)
+// Basic error handling middleware
 app.use((err, req, res, next) => {
-console.error(err.stack);
-res.status(500).json({ error: "Something went wrong!" });
+    console.error(err.stack);
+    res.status(500).json({ error: "Something went wrong!" });
 });
-
 
 export default app;

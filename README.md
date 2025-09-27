@@ -46,7 +46,7 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 
 ---
 
-## Security Notes
+## Security Considerations
 
 * 🔒 Private keys are stored **in plaintext** for demo purposes.
 
@@ -73,6 +73,14 @@ npm run dev
 ```
 
 The backend will start on `http://localhost:4000`
+
+Set the RPC endpoint you want to use in `backend/.env`:
+
+```bash
+ETH_RPC_URL="https://sepolia.infura.io/v3/<your-key>"
+```
+
+> Any Ethereum-compatible JSON-RPC URL works (Alchemy, Infura, Anvil, Hardhat, etc.).
 
 ### 2. Frontend
 
