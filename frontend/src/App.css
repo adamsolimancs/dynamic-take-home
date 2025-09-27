@@ -1,0 +1,203 @@
+/* Layout */
+#root {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.brand .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #646cff, #22d3ee);
+  box-shadow: 0 0 16px rgba(100,108,255,0.5);
+}
+
+.sub {
+  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+.toast.error {
+  border: 1px solid rgba(244,63,94,0.4);
+  background: rgba(244,63,94,0.08);
+  color: #f43f5e;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+/* Wallets */
+.wallets {
+  border: 1px solid rgba(100,108,255,0.2);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.wallets .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+h2 {
+  margin: 0.25rem 0 0.5rem 0.25rem;
+  font-size: 1.15rem;
+}
+
+.primary {
+  background: linear-gradient(135deg, #646cff, #22d3ee);
+  color: white;
+  border: none;
+}
+
+.empty {
+  opacity: 0.6;
+  padding: 0.5rem 0.25rem 0.75rem;
+}
+
+.wallet-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.wallet-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.25rem;
+  border: 1px solid rgba(100,108,255,0.18);
+  background: rgba(100,108,255,0.06);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
+.wallet-item.active {
+  border-color: #646cff;
+  background: rgba(100,108,255,0.12);
+}
+
+.wallet-id {
+  font-weight: 600;
+}
+
+.wallet-addr {
+  opacity: 0.75;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Cards grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid rgba(148,163,184,0.25);
+  border-radius: 16px;
+  padding: 0.75rem;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.card-head h3 {
+  margin: 0.25rem 0 0.5rem 0.25rem;
+  font-size: 1.05rem;
+}
+
+.card-body {
+  padding: 0.25rem;
+}
+
+.card-body.v {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.muted { opacity: 0.6; }
+
+.balance {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: transparent;
+  color: inherit;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row.gap { gap: 0.5rem; }
+
+.sm { max-width: 180px; }
+
+.unit { opacity: 0.7; }
+
+.mono label {
+  display: block;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+
+.mono code {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: rgba(148,163,184,0.15);
+  border: 1px solid rgba(148,163,184,0.25);
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+}
+
+.scroll code { max-height: 9rem; overflow: auto; }
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0.6;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
