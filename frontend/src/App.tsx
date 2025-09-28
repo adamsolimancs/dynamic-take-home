@@ -24,7 +24,7 @@ export default function App() {
   const [balance, setBalance] = useState<number | null>(null)
   const [loadingBalance, setLoadingBalance] = useState(false)
 
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState('Hi Dynamic!')
   const [signedMessage, setSignedMessage] = useState<string | null>(null)
   const [loadingSign, setLoadingSign] = useState(false)
 
@@ -145,7 +145,7 @@ export default function App() {
           <div className="dot" />
           <span>VenCura</span>
         </div>
-        <div className="sub">Minimal custodial wallet demo</div>
+        <div className="sub">Minimal Custodial Wallet Demo Using Ethers</div>
       </header>
 
       {error && <div className="toast error">{error}</div>}

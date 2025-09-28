@@ -10,7 +10,6 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 ```
 /project-root
   /backend       # Express.js server with wallet APIs
-  /database      # Database setup and schema (SQLite / in-memory)
   /frontend      # Vite + React UI for interacting with the API
 ```
 
@@ -21,12 +20,12 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 * **User & Wallet Management**
 
   * Authenticated user can create one or more wallets.
-* **API Endpoints**
+* **API Endpoints** (beginning with /api/wallets)
 
-  * `POST /wallet` → Create a wallet (returns address + id)
-  * `GET /wallet/:id/balance` → Get wallet balance
-  * `POST /wallet/:id/signMessage` → Sign a message with wallet
-  * `POST /wallet/:id/sendTransaction` → Send a transaction
+  * `POST /create` → Create a wallet (returns address + id)
+  * `GET /:id/balance` → Get wallet balance
+  * `POST /:id/signMessage` → Sign a message with wallet
+  * `POST /:id/sendTransaction` → Send a transaction
 * **Frontend**
 
   * Minimal React UI to demo wallet creation and interactions
@@ -38,10 +37,10 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 
 ## Tech Stack
 
-* **Backend**: Node.js, Express, ethers.js
-* **Database**: SQLite (via Prisma)
-  *For simplicity, could also be mocked with an in-memory store*
 * **Frontend**: React (Vite)
+* **Backend**: Node.js, Express, ethers.js
+* **Authentication**: Dynamic.xyz authentication SDK
+* **Database**: Mocked with an in-memory store
 * **Deployment**: Vercel (frontend) + Heroku/Render (backend)
 
 ---
@@ -56,20 +55,19 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 
 ---
 
-## Setup Instructions
+## Local Setup Instructions
 
 ### Prerequisites
 
 * Node.js 18+
 * npm or yarn
-* (Optional) SQLite installed locally
 
 ### 1. Backend
 
 ```bash
 cd backend
 npm install
-npm run dev
+node src/server.js
 ```
 
 The backend will start on `http://localhost:4000`
@@ -92,15 +90,6 @@ npm run dev
 
 The frontend will start on `http://localhost:5173`
 
-### 3. Database
-
-* If using SQLite + Prisma:
-
-```bash
-cd database
-npx prisma migrate dev --name init
-```
-
 ---
 
 ## API Reference
@@ -108,7 +97,7 @@ npx prisma migrate dev --name init
 ### Create Wallet
 
 ```http
-POST /wallet
+POST /api/wallets/create
 ```
 
 **Response**
@@ -123,7 +112,7 @@ POST /wallet
 ### Get Balance
 
 ```http
-GET /wallet/:id/balance
+GET /api/wallets/:id/balance
 ```
 
 **Response**
@@ -137,7 +126,7 @@ GET /wallet/:id/balance
 ### Sign Message
 
 ```http
-POST /wallet/:id/signMessage
+POST /api/wallets/:id/signMessage
 {
   "message": "hello world"
 }
@@ -154,7 +143,7 @@ POST /wallet/:id/signMessage
 ### Send Transaction
 
 ```http
-POST /wallet/:id/sendTransaction
+POST /api/wallets/:id/sendTransaction
 {
   "to": "0xabc...",
   "amount": 0.01
@@ -173,7 +162,7 @@ POST /wallet/:id/sendTransaction
 
 ## Deployment
 
-* **Backend**: Heroku / Render
+* **Backend**: Render
 * **Frontend**: Vercel
 
 ---
@@ -182,14 +171,8 @@ POST /wallet/:id/sendTransaction
 
 * Encrypt private keys before storage
 * Add multi-account per user
+* For simplicity, wallets are stored in memory. In production, I would use a database (Postgres/SQLite) with encryption for private keys.
 * Shared wallets with access control
 * Transaction history (on/off-chain)
-* Proper authentication with JWT
 * Comprehensive test coverage
 
----
-
-## Notes
-
-This project focuses on **API design, security considerations, and backend architecture**.
-The UI is intentionally minimal to highlight backend functionality.

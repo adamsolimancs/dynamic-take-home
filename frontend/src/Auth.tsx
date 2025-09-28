@@ -49,7 +49,7 @@ const ConnectWithEmailView: FC = () => {
 
     // Rerender component anytime user changes to maintain security.
     useEffect(() => {
-        console.log("User changed", JSON.stringify(user))
+        console.log("User changed")
     }, [user]);
 
     // If the user is authenticated, render the main application.

@@ -2,8 +2,6 @@ import config from "../config.js";
 import { JsonRpcProvider, Wallet, formatEther, isAddress, parseEther } from 'ethers'
 
 const RPC_URL = config.ETH_RPC_URL || process.env.ETH_RPC_URL;
-console.log('CHECKPOINT -- ETH_RPC_URL:', RPC_URL)
-
 
 let provider = null
 if (RPC_URL) {
@@ -38,7 +36,9 @@ function ensureConnectedWallet(record) {
   return connected
 }
 
+// Create a new wallet with an optional label
 export function createWallet(label) {
+  // Use ethers to create a random wallet
   const wallet = Wallet.createRandom()
   const connectedWallet = provider ? wallet.connect(provider) : wallet
   const id = String(nextId++)
@@ -57,11 +57,11 @@ export function createWallet(label) {
   }
 }
 
+// Get the balance of a wallet by ID
 export async function getBalance(id) {
   const record = getWalletRecord(id)
   const wallet = ensureConnectedWallet(record)
   const activeProvider = wallet.provider
-  console.log('Active provider:', activeProvider, 'ETH_RPC_URL:', RPC_URL, 'Wallet record:', record, 'Wallet:', wallet)
 
   if (!activeProvider) {
     console.log('Set ETH_RPC_URL or RPC_URL.')
@@ -72,6 +72,7 @@ export async function getBalance(id) {
   return formatEther(balance)
 }
 
+// Sign a message with the wallet's private key
 export async function signMessage(id, message) {
   if (typeof message !== 'string' || message.trim().length === 0) {
     throw new HttpError(400, 'Message must be a non-empty string')
@@ -80,6 +81,7 @@ export async function signMessage(id, message) {
   return record.wallet.signMessage(message)
 }
 
+// Send a transaction from the wallet to another address
 export async function sendTransaction(id, to, amount) {
   if (!isAddress(to)) {
     throw new HttpError(400, 'Recipient address is invalid')
@@ -107,6 +109,7 @@ export async function sendTransaction(id, to, amount) {
   return tx.hash
 }
 
+// List all wallets (without private keys)
 export function listWallets() {
   return Array.from(walletStore.entries()).map(([id, record]) => ({
     id,
