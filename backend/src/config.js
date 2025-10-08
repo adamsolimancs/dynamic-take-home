@@ -6,8 +6,9 @@ const config = {
   app: {
     port: process.env.PORT || 4000,
     env: process.env.NODE_ENV || "",
-    ETH_RPC_URL: process.env.ETH_RPC_URL || "",
   },
+  ETH_RPC_URL: process.env.ETH_RPC_URL || "",
+  WALLET_ENCRYPTION_KEY: process.env.WALLET_ENCRYPTION_KEY || "",
 };
 
 export default config;

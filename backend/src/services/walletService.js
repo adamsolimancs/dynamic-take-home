@@ -28,31 +28,39 @@ function getWalletRecord(id) {
   return record
 }
 
-function ensureConnectedWallet(record) {
-  if (!provider) return record.wallet
-  if (record.wallet.provider) return record.wallet
-  const connected = record.wallet.connect(provider)
-  record.wallet = connected
-  return connected
+function requireEncryptionKey() {
+  const encryptionKey = config.WALLET_ENCRYPTION_KEY || process.env.WALLET_ENCRYPTION_KEY
+  if (!encryptionKey) {
+    throw new HttpError(500, 'Wallet encryption key is not configured.')
+  }
+  return encryptionKey
+}
+
+async function loadWallet(record) {
+  const wallet = await Wallet.fromEncryptedJson(record.encryptedJson, requireEncryptionKey())
+  if (!provider) return wallet
+  return wallet.connect(provider)
 }
 
 // Create a new wallet with an optional label
-export function createWallet(label) {
+export async function createWallet(label) {
+  const encryptionKey = requireEncryptionKey()
   // Use ethers to create a random wallet
   const wallet = Wallet.createRandom()
-  const connectedWallet = provider ? wallet.connect(provider) : wallet
+  const encryptedJson = await wallet.encrypt(encryptionKey)
   const id = String(nextId++)
   const normalizedLabel = label?.toString().trim() || undefined
 
   walletStore.set(id, {
-    wallet: connectedWallet,
+    encryptedJson,
+    address: wallet.address,
     label: normalizedLabel,
     createdAt: new Date().toISOString(),
   })
 
   return {
     id,
-    address: connectedWallet.address,
+    address: wallet.address,
     label: normalizedLabel,
   }
 }
@@ -60,7 +68,7 @@ export function createWallet(label) {
 // Get the balance of a wallet by ID
 export async function getBalance(id) {
   const record = getWalletRecord(id)
-  const wallet = ensureConnectedWallet(record)
+  const wallet = await loadWallet(record)
   const activeProvider = wallet.provider
 
   if (!activeProvider) {
@@ -78,7 +86,8 @@ export async function signMessage(id, message) {
     throw new HttpError(400, 'Message must be a non-empty string')
   }
   const record = getWalletRecord(id)
-  return record.wallet.signMessage(message)
+  const wallet = await loadWallet(record)
+  return wallet.signMessage(message)
 }
 
 // Send a transaction from the wallet to another address
@@ -99,7 +108,7 @@ export async function sendTransaction(id, to, amount) {
   }
 
   const record = getWalletRecord(id)
-  const wallet = ensureConnectedWallet(record)
+  const wallet = await loadWallet(record)
 
   if (!wallet.provider) {
     throw new HttpError(500, 'Ethereum RPC provider is not configured. Set ETH_RPC_URL or RPC_URL.')
@@ -113,8 +122,14 @@ export async function sendTransaction(id, to, amount) {
 export function listWallets() {
   return Array.from(walletStore.entries()).map(([id, record]) => ({
     id,
-    address: record.wallet.address,
+    address: record.address,
     label: record.label,
     createdAt: record.createdAt,
   }))
+}
+
+// Test-only helper to clear in-memory state between runs
+export function __resetWalletStoreForTests() {
+  walletStore.clear()
+  nextId = 1
 }

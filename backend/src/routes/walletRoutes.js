@@ -34,7 +34,7 @@ router.get(
 router.post(
     "/create",
     handle(async (req, res) => {
-        const wallet = createWallet(req.body?.label);
+        const wallet = await createWallet(req.body?.label);
         res.status(201).json(wallet);
     }),
 );

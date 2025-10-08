@@ -32,6 +32,9 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 * **Blockchain**
 
   * Uses [ethers.js](https://docs.ethers.org/) (Sepolia testnet) for wallet and transaction handling
+* **Security**
+
+  * Wallet private keys are stored as ethers encrypted JSON using `WALLET_ENCRYPTION_KEY`
 
 ---
 
@@ -41,54 +44,7 @@ The goal was to build a minimal custodial wallet service ("VenCura") with a back
 * **Backend**: Node.js, Express, ethers.js
 * **Authentication**: Dynamic.xyz authentication SDK
 * **Database**: Mocked with an in-memory store
-* **Deployment**: Vercel (frontend) + Heroku/Render (backend)
-
----
-
-## Security Considerations
-
-* 🔒 Private keys are stored **in plaintext** for demo purposes.
-
-  * In production: keys should be encrypted or managed via an HSM / key vault.
-* Authentication is simplified; a full OAuth/JWT solution would be needed in production.
-* No rate limiting or DDOS protection included.
-
----
-
-## Local Setup Instructions
-
-### Prerequisites
-
-* Node.js 18+
-* npm or yarn
-
-### 1. Backend
-
-```bash
-cd backend
-npm install
-node src/server.js
-```
-
-The backend will start on `http://localhost:4000`
-
-Set the RPC endpoint you want to use in `backend/.env`:
-
-```bash
-ETH_RPC_URL="https://sepolia.infura.io/v3/<your-key>"
-```
-
-> Any Ethereum-compatible JSON-RPC URL works (Alchemy, Infura, Anvil, Hardhat, etc.).
-
-### 2. Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The frontend will start on `http://localhost:5173`
+* **Deployment**: Vercel (frontend) + Render (backend)
 
 ---
 
@@ -157,22 +113,55 @@ POST /api/wallets/:id/sendTransaction
   "transactionHash": "0xdef..."
 }
 ```
-
 ---
+## Local Setup Instructions
 
-## Deployment
+### Prerequisites
 
-* **Backend**: Render
-* **Frontend**: Vercel
+* Node.js 18+
+* npm or yarn
+
+### Tests
+
+```bash
+node --test tests
+```
+
+### 1. Backend
+
+```bash
+cd backend
+npm install
+node src/server.js
+```
+
+The backend will start on `http://localhost:4000`
+
+Set the RPC endpoint you want to use in `backend/.env`:
+
+```bash
+ETH_RPC_URL="https://sepolia.infura.io/v3/<your-key>"
+WALLET_ENCRYPTION_KEY="replace-with-a-strong-passphrase"
+```
+
+> Any Ethereum-compatible JSON-RPC URL works (Alchemy, Infura, Anvil, Hardhat, etc.).
+
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173`
 
 ---
 
 ## Future Improvements
 
-* Encrypt private keys before storage
 * Add multi-account per user
-* For simplicity, wallets are stored in memory. In production, I would use a database (Postgres/SQLite) with encryption for private keys.
+* Wallets are still stored in-memory; production would move the encrypted blobs into a database (Postgres/SQLite) or HSM-backed store.
 * Shared wallets with access control
 * Transaction history (on/off-chain)
 * Comprehensive test coverage
-
